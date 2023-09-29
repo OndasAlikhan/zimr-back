@@ -28,7 +28,7 @@ model Message {
   updatedAt DateTime @updatedAt
   text      String   @db.VarChar(255)
   read      Boolean  @default(false)
-  chat Chat @relation(fields: [chatId], references: [id])
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
   chatId Int
   sender Boolean // would be a userId, but I didn't implement auth
 }

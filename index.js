@@ -27,9 +27,44 @@ app.get('/chats', async (req, res) => {
               },
               take: 1
             },
+            _count: {
+              select: {
+                messages: {
+                  where: {
+                    read: false
+                  }
+                }
+              }
+            }
         },
       })
     res.send(result)
+})
+app.get('/chats/:chatId', async (req, res) => {
+  const chatId = req.params.chatId
+  const result = await prisma.chat.findMany({
+    where: {
+      id: Number(chatId)
+    },
+    include: {
+        messages: {
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: 1
+        },
+        _count: {
+          select: {
+            messages: {
+              where: {
+                read: false
+              }
+            }
+          }
+        }
+    },
+  })
+  res.send(result)
 })
 app.post('/chats', async (req, res) => {
   await prisma.chat.create({
@@ -37,6 +72,20 @@ app.post('/chats', async (req, res) => {
       title: req.body.title,
     }
   })
+  res.send({status: 'ok'})
+})
+app.post('/unread/:chatId', async (req, res) => {
+  const chatId = req.params.chatId
+
+  await prisma.message.updateMany({
+    where: {
+      chatId: Number(chatId)
+    },
+    data: {
+      read: true,
+    }
+  })
+
   res.send({status: 'ok'})
 })
 app.delete('/chats', async (req, res) => {
@@ -70,12 +119,6 @@ socketIO.on('connection', (socket) => {
     console.log('🔥: A user disconnected');
   });
 
-  socket.on('message', (data) => {
-    console.log('data', data)
-  })
-  socket.on('shouting', (data) => {
-    console.log('shouting data', data)
-  })
   socket.on('new_message', async (data) => {
     console.log('new_message', data)
 
@@ -84,6 +127,7 @@ socketIO.on('connection', (socket) => {
         text: data.text,
         chatId: data.chatId,
         sender: true,
+        read: true,
       }
     })
     socket.emit('sent_message_saved', res)
@@ -91,14 +135,14 @@ socketIO.on('connection', (socket) => {
     setTimeout(async () => {
       const result = await prisma.message.create({
         data: {
-          text: `Server response🔥: [${data.text}]`,
+          text: `🔥: [${data.text}]`,
           chatId: data.chatId,
           sender: false,
         }
       })
       console.log('sending response:', result)
       socket.emit('receive_message', result)
-    }, 1500)
+    }, 3000)
     // console.log('res', res)
   })
 });
