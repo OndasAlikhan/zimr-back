@@ -151,6 +151,8 @@ http.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
 
+export default app
+
 // main()
 //   .then(async () => {
 //     await prisma.$disconnect()
