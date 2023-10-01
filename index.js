@@ -17,6 +17,10 @@ const prisma = new PrismaClient()
 app.use(cors())
 app.use(express.json())
 
+app.get('/', (req, res) => {
+  res.send({status: 'ok'})
+})
+
 // CHATS
 app.get('/chats', async (req, res) => {
     const result = await prisma.chat.findMany({
@@ -151,8 +155,7 @@ http.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
 
-export default http
-
+module.exports = http
 // main()
 //   .then(async () => {
 //     await prisma.$disconnect()
